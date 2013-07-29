@@ -65,7 +65,7 @@ def start_game():
 
 @app.route("/games")
 def games():
-    completed_games = Game.query.filter(Game.completed).all()
+    completed_games = Game.query.filter(Game.completed).order_by(Game.id.desc()).all()
     return render_template('games.html', completed_games = completed_games)
 
 @app.route("/watch-game/<game_id>")
