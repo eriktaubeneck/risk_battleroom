@@ -6,6 +6,7 @@ Flask-WTF==0.8.4
 Jinja2==2.7
 Markdown==2.3.1
 MarkupSafe==0.18
+Risk==0.1.1
 SQLAlchemy==0.8.2
 WTForms==1.0.4
 Werkzeug==0.9.1
@@ -16,6 +17,7 @@ celery==3.0.21
 itsdangerous==0.22
 kombu==2.5.12
 mock==1.0.1
+psycopg2==2.5.1
 pymongo==2.5.2
 python-dateutil==2.1
 requests==1.2.3
