@@ -10,15 +10,16 @@
     var force; 
     
     //fixed positions for overlay onto risk board
-    var fixedPositions = { 
+  
+    var fixedPositions = {
         "alaska" : {x: 50, y:30, forced:true},
         "northwest territory" : {x: 150, y:70},
         "kamchatka" : {x: 700, y:30, forced:true},
         "central america" : {x: 130, y:250},
         "central africa" : {x: 400, y:375},
         "north africa" : {x: 344, y:304, forced:true},
-        "eastern united states" : {x: 175, y:190, forced:true},
-        "western united states" : {x: 120, y:175, forced:true},
+        "eastern united states" : {x: 190, y:235, forced:true},
+        "western united states" : {x: 100, y:225, forced:true},
         "greenland" : {x: 250, y:50, forced:true},
         "indonesia" : {x: 600, y:375},
         "eastern australia" : {x: 690, y:410},
@@ -28,24 +29,24 @@
         "ontario" : {x: 175, y:135},
         "eastern canada" : {x: 230, y:125},
         "brazil" : {x: 238, y:332, forced:true},
-        "india" : {x: 550, y:280, forced:true},
+        "india" : {x: 575, y:350, forced:true},
         "afghanistan" : {x: 500, y:200},
         "middle east" : {x: 450, y:250},
         "southeast asia" : {x: 615, y:290},
         "madagascar" : {x: 475, y:440, forced:true},
-        "argentina" : {x: 190, y:415, forced:true},
-        "yakutsk" : {x: 600, y:65},
-        "japan" : {x: 685, y:180, forced:true},
+        "argentina" : {x: 250, y:500, forced:true},
+        "yakutsk" : {x: 600, y:65, forced:true},
+        "japan" : {x: 735, y:140, forced:true},
         "china" : {x: 590, y:230},
-        "mongolia" : {x: 610, y:180},
+        "mongolia" : {x: 700, y:240, forced:true},
         "ural" : {x: 515, y:130},
         "irkutsk" : {x: 595, y:115},
         "siberia" : {x: 550, y:80},
-        "russia" : {x: 450, y:140, forced:true},
+        "russia" : {x: 480, y:100, forced:true},
         "iceland" : {x: 320, y:85},
         "northern europe" : {x: 375, y:170},
         "southern europe" : {x: 375, y:215},
-        "south africa" : {x: 400, y:440, forced:true},
+        "south africa" : {x: 400, y:500, forced:true},
         "western europe" : {x: 325, y:230},
         "great britain" : {x: 300, y:165, forced:true},
         "scandinavia" : {x: 385, y:85, forced:true},
@@ -54,7 +55,7 @@
         "peru" : {x:170, y:350},
         "egypt" : {x:400, y:290},
     };
-    
+  
     var startFromDB = function () {
         makeSlider(); 
         initializeStatusDisplay(); 
@@ -141,6 +142,22 @@
     function doStuff() {    
         var height = 600; 
         var width = 800; 
+	
+	var conts = {
+            "europe": "#0044FF",
+            "asia": "#00A231",
+            "north america": "#F7FF01",
+            "south america": "#FF0000",
+            "africa": "#FF8901",
+            "australia": "#9D00A2"
+        };
+        var groups = d3.nest().key(function(d) {return d.continent}).entries(nodeList);
+        var groupPath = function(d) {
+            return "M" +
+                d3.geom.hull(d.values.map(function(i) {return [i.x, i.y]; }))
+                    .join("L")
+                + "Z";
+        };
 
         force = d3.layout.force()
             .nodes(nodeList)
@@ -163,13 +180,28 @@
         d3.select("#map").append("br"); 
  
         //create element for risk board background image
-        var background = d3.select("#map").append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("id", "background"); 
+        //var background = d3.select("#map").append("svg")
+        //    .attr("width", width)
+        //    .attr("height", height)
+        //    .attr("id", "background"); 
+
+	var continentBoundary = svg.selectAll("path.group")
+                .data(groups)
+                    .attr("d", groupPath)
+                    .attr("class", "group")
+                .enter().insert("path", "circle")
+                    .style("fill", function(d) {return conts[d.key];})
+                    .attr("class", "group")
+                    .style("stroke", function(d) {return conts[d.key];})
+                    .attr("class", "group")
+                    .style("stroke-width", 50)
+                    .style("stroke-linejoin", "round")
+                    .style("opacity", 0.4)
+                    .attr("d", groupPath);
+
 
     //add links 
-        var path = svg.append("svg:g").selectAll("path")
+        var path = svg.append("svg:g").selectAll("path.link")
             .data(force.links())
             .enter().append("svg:path")
             .attr("class", "link")
@@ -187,19 +219,10 @@
             .call(force.drag); 
     //add nodes?
         
-        var conts = {
-            "europe": "#4D4DFF",
-            "asia": "#009933",
-            "north america": "#000000",
-            "south america": "#FF3333",
-            "africa": "#FF944D",
-            "australia": "#A347A3"
-        };
-
         var circle = node.append("circle")
             .attr("r", 7)
             .attr("class", "countryCircle")
-            .style("stroke", function(d) {return conts[d.continent];}); 
+            .style("stroke", "black"); 
 
         //add text?
         var label = node.append("text")
@@ -216,6 +239,8 @@
             .text(function(d) {return d.troops;}); 
 
         function tick() {
+	    continentBoundary.attr("d", groupPath); 
+
             path.attr("d", function(d) {
                 var dx = d.target.x - d.source.x,
                     dy = d.target.y - d.source.y,
@@ -295,11 +320,145 @@
         };
         //TODO: parse last Action into 1) readable text
         //                             2) animated shit on graph
-        var actions = ["deployed", "attacked", "reinforced", "defeated", "spent"];
+        var actions = ["chose", "deployed", "attacked", "reinforced", "defeated", "spent"];
         var pos = (actions.map(function(x) {return lastAction.indexOf(x);})); 
         var action = actions[pos.indexOf(d3.max(pos))];
-        $("#lastAction").text(lastAction); 
+        var lhs = lastAction.slice(0, lastAction.indexOf(action));
+        var rhs = lastAction.slice(lastAction.indexOf(action) + action.length);
+        var parsedAction;
+        if (action == "attacked") {
+            actionAttacked(countries, lhs, rhs);
+        } else if (action == "deployed") {
+            actionDeployed(countries, lhs, rhs);
+        } else if (action == "reinforced") {
+            actionReinforced(countries, lhs, rhs);
+        } else if (action == "defeated") {
+            actionDefeated(countries, lhs, rhs);
+        } else if (action == "spent") {
+            actionSpent(countries, lhs, rhs);
+        } else if (action == "chose") {
+            actionChose(countries, lhs, rhs);
+        }
     }
+
+    var actionAttacked = function (countries, lhs, rhs) {
+        var attackingCountry = lhs.slice(11, -3);
+        var defendingCountry = rhs.slice(12, rhs.indexOf(">")-1);
+        var attacker = countries[attackingCountry]["owner"];
+        var defender = countries[defendingCountry]["owner"];
+        var unparsedResults = rhs.slice(rhs.indexOf(">"));
+        var lost = unparsedResults.indexOf("lost");
+        var loser;
+        var troops;
+        var troopText;
+        if (unparsedResults.charAt(lost + 5) == 0) {
+            unparsedResults = unparsedResults.slice(lost+5);
+            lost = unparsedResults.indexOf("lost");
+            loser = unparsedResults.slice(14, lost-3);
+            troops = unparsedResults.charAt(lost+5);
+            troopText = (troops == 1 ? "troop":"troops")
+        } else {
+            loser = unparsedResults.slice(14, lost-3);
+            troops = unparsedResults.charAt(lost+5);
+            troopText = (troops == 1 ? "troop":"troops")
+        }
+        d3.select("#lastAction").text(attacker + " / " + attackingCountry + " attacked " + defender + " / " +  defendingCountry);
+        d3.select("#lastActionResults").text(loser + " lost " + troops + " " + troopText);
+        attackAnimation(attackingCountry, defendingCountry);
+    };
+
+    var attackAnimation = function (attacker, defender) {
+        d3.select("#" + attacker.split(" ").join("") + " .countryCircle")
+            .style("stroke", "red")
+        .transition()
+            .style("stroke", "black")
+            .duration(1000);
+
+        d3.selectAll(".link").each(function(d) {
+            if ((d.source.name == attacker && d.target.name == defender) || (d.source.name == defender && d.   target.name == attacker)) {
+                d3.select(this)
+                    .style("stroke", "red")
+                    .style("stroke-width", 5)
+                .transition()
+                    .style("stroke", "black")
+                    .style("stroke-width", 3)
+                    .duration(1000);
+            }
+        });
+    };
+
+var actionReinforced = function (currentTurn, lhs, rhs) {
+        var from = lhs.slice(11, -3);
+        var to = rhs.slice(12, rhs.indexOf(">")-1);
+        var results = rhs.slice(rhs.indexOf(">") + 1);
+        d3.select("#lastAction").text(from + " reinforced " + to + results);
+        d3.select("#lastActionResults").text("");
+        reinforceAnimation(from, to);
+    };
+
+    var reinforceAnimation = function (from, to) {
+        d3.selectAll(".link").each(function(d) {
+            if ((d.source.name == from && d.target.name == to) || (d.source.name == to && d.target.name ==     from)) {
+                d3.select(this)
+                    .style("stroke", "blue")
+                    .style("stroke-width", 5)
+                .transition()
+                    .style("stroke", "black")
+                    .style("stroke-width", 3)
+                    .duration(1000);
+            }
+        });
+    };
+
+    var actionDeployed = function (currentTurn, lhs, rhs) {
+        var player = lhs;
+        var countries = rhs.slice(1,-1).split(",");
+        var deployedTo = "";
+        for (i in countries) {
+            var data = countries[i].split(":");
+            var country_name = data[0].slice(3, -1);
+            var troops = data[1];
+            deployedTo = deployedTo + troops + " troops to " + country_name + "</br>";
+            deployAnimation(country_name);
+        }
+        d3.select("#lastAction").html(player + " deployed: </br> " + deployedTo);
+        d3.select("#lastActionResults").text("");
+    };
+
+    var deployAnimation = function (country) {
+        d3.select("#" + country.split(" ").join("") + " .countryCircle").each(function(d) {
+            var cStroke = d3.select(this).style("stroke");
+            d3.select(this)
+                .style("stroke", "white")
+            .transition()
+                .style("stroke", "black")
+                .duration(1000);
+        });
+    };
+    var actionDefeated = function (currentTurn, lhs, rhs) {
+        var attacker = lhs.slice(11, -3);
+        var loser = rhs.slice(12, -2);
+        var results = "";
+        d3.select("#lastAction").text(attacker + " defeated " + loser);
+        d3.select("#lastActionResults").text(results);
+	attackAnimation(attacker, loser);
+    };
+
+    var actionSpent = function (currentTurn, lhs, rhs) {
+        var player = lhs;
+        var cards = rhs;
+        var results = "results";
+        d3.select("#lastAction").text(player + " spent " + cards);
+        d3.select("#lastActionResults").text("");
+    };
+
+    var actionChose = function (currentTurn, lhs, rhs) {
+        var player = lhs.slice(9, -3);
+        var country = rhs.slice(20, -2);
+        d3.select("#lastAction").text(player + " chose " + country);
+        d3.select("#lastActionResults").text("");
+        deployAnimation(country);
+    };
 
     var updateNodes = function(currentTurn) {
         var countries = currentTurn["countries"];

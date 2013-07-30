@@ -18,7 +18,7 @@ h2 {
 }
 path.link {
   fill: none;
-  stroke: #666;
+  stroke: black;
   stroke-width: 3px; 
 }
 
@@ -52,7 +52,7 @@ path.link {
 
 line {
   stroke: #666;
-  stroke-width: 1.5px; 
+  stroke-width: 2.5px; 
 }
 
 circle {
