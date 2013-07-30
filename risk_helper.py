@@ -1,5 +1,6 @@
 from risk.models import Player as BasePlayer, Players as BasePlayers
 import requests
+from urlparse import urljoin
 import json
 import random
 
@@ -9,10 +10,10 @@ class Player(BasePlayer):
     def __init__(self, name, base_url):
         super(Player, self).__init__(name)
         self.base_url = base_url
-        self.turn_url = self.base_url+"/turn"
-        self.broadcast_url = self.base_url+"/not_turn"
+        self.turn_url = urljoin(self.base_url,"/turn")
+        self.broadcast_url = urljoin(self.base_url,"/not_turn")
         self.timeout = 30.
-        r = requests.get(self.base_url+"/status", timeout=self.timeout)
+        r = requests.get(urljoin(self.base_url,"status"), timeout=self.timeout)
         assert r.status_code == 200
 
     def send_request(self, game):
@@ -158,7 +159,7 @@ class Player(BasePlayer):
     def broadcast_game(self, game):
         payload = {'risk': game.game_state_json(self)}
         try:
-            r = requests.post(self.broadcast_url, data=payload, timeout=0.1)
+            r = requests.post(self.broadcast_url, data=payload, timeout=0.5)
         except Exception as e:
             print e
             pass

@@ -7,6 +7,8 @@ from flask.ext.markdown import Markdown
 from wtforms import TextField, SelectMultipleField
 import os
 import json
+import requests
+from urlparse import urljoin
 from risk.game import Game as RiskGame
 from app.forms import UserForm, StartGameForm
 
@@ -31,9 +33,24 @@ def signup():
     if form.validate_on_submit():
         username = form.username.data
         base_url = form.base_url.data
-        user = User(username, base_url)
-        db.session.add(user)
-        db.session.commit()
+        try:
+            r = requests.get(urljoin(base_url,'status'))
+        except Exception as e:
+            print type(e), ': ', e.message
+            flash("That is not a proper url")
+            return render_template("signup.html", form=UserForm())
+        if r.status_code != 200:
+            flash("The url did not return a 200 status on /status")
+            return render_template("signup.html", form=UserForm())
+        try:
+            user = User(username, base_url)
+            db.session.add(user)
+            db.session.commit()
+        except Exception as e:
+            print type(e), ': ', e.message
+            flash("That name or url is taken. Please try another.")
+            return render_template("signup.html", form=UserForm())
+        flash("User %s signed up successfully!" % username)
         form = UserForm()
     return render_template("signup.html", form=form)
 
