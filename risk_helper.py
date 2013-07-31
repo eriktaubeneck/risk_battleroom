@@ -26,6 +26,8 @@ class Player(BasePlayer):
     def got_exception(self, game, e):
         self.errors += 1
         game.last_action = 'error %s' % self.errors
+        print "recieved error from %s with %s errors" % (self.name, self.errors)
+        print self.turn_url
         self.available_actions = []
         self.check_neutralized()
 
@@ -158,11 +160,12 @@ class Player(BasePlayer):
 
     def broadcast_game(self, game):
         payload = {'risk': game.game_state_json(self)}
-        try:
-            r = requests.post(self.broadcast_url, data=payload, timeout=0.5)
-        except Exception as e:
-            print e
-            pass
+        if not self.is_neutral:
+            try:
+                r = requests.post(self.broadcast_url, data=payload, timeout=0.5)
+            except Exception as e:
+                print e
+                pass
 
 class Players(BasePlayers):
 
