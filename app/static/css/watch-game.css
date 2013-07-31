@@ -22,6 +22,21 @@ path.link {
   stroke-width: 3px; 
 }
 
+#toolbar {
+    padding: 4px;
+    display: inline-block;
+    background-color: gray; 
+    font-size: 10px; 
+}
+
+#playSpeed {
+	display: inline-block;
+}
+
+label {
+	margin-bottom: 0px; 
+}
+
 .label {
     color: black;  
     font-weight: bold; 

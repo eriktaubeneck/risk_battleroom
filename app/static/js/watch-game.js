@@ -1,10 +1,15 @@
+//TODO: use HTML5 Local Storage to cache results
+//      check to see if turn exists in local storage before AJAX --> server request
+//        - Also pre-fetch next 10 turns and save them in localStorage for you. 
+//      clear game data from localstorage at start
+//	save the last position you were at in each game, so if you exit and come back the state in the game is preserved
 //;(function(exports){
 
     var gameLog = []; 
     var nodeList = []; 
     var linkList = [];
     var playerList = {}; 
-    var colors = d3.shuffle(["#66FFFF", "#33FF33", "#FFFF4D", "#FF66CC", "#FFA366", "#C299C2"]); 
+    var colors = d3.shuffle(["#4C92C3", "#ff7f0e", "#2ca02c", "#d62728", "#e377c2", "#ffff00"]); 
     var gameID; 
     var broadcasts; 
     var force; 
@@ -136,6 +141,9 @@
             var lastActionResults = d3.select("#gameStats").append("p")
                 .text("Results")
                 .attr("id", "lastActionResults"); 
+            var asdf = d3.select("#gameStats").append("p")
+                .text("asdf")
+                .attr("id", "asdf"); 
         });
     };
         
@@ -216,7 +224,7 @@
                 var id = d.name; 
                 return id.split(" ").join(""); 
             })
-            .call(force.drag); 
+            //.call(force.drag); 
     //add nodes?
         
         var circle = node.append("circle")
@@ -276,15 +284,70 @@
 
     var makeSlider = function() {
         var sliderMax = broadcasts-1;
+	var defaultSpeed = 250;
+	var speed = defaultSpeed;  
+	var factor = 1;  
         $(function() {
-            $("#play").button().click(function(event) {
-                if(!$("#play").data("intervalID"))
-                    $("#play").data("intervalID", play(10));    
+            $("#beginning").button({
+				text:false, 
+				icons: {primary: "ui-icon-seek-start"}
+			}).click(function(event) {
+                pause($("#pause").data("intervalID")); 
+				autoSlide(1); 
             });
-            $("#pause").button().click(function(event) {
-                pause($("#play").data("intervalID"));
-                $("#play").data("intervalID", null);
+            $("#rewind").button({
+				text:false, 
+				icons: {primary: "ui-icon-seek-prev"}
+			}).click(function(event) {
+                pause($("#pause").data("intervalID"));
+			factor = -1;  
+	        	$("#pause").data("intervalID", play(speed, factor));    
             });
+            $("#play").button({
+				text:false, 
+				icons: {primary: "ui-icon-play"}
+			}).click(function(event) {
+                pause($("#pause").data("intervalID")); 
+		factor = 1; 
+                $("#pause").data("intervalID", play(speed));    
+            });
+            $("#pause").button({
+				text:false, 
+				icons: {primary: "ui-icon-pause"}
+			}).click(function(event) {
+                pause($("#pause").data("intervalID"));
+                $("#pause").data("intervalID", null);
+            });
+            $("#nextTurn").button({
+				text:false, 
+				icons: {primary: "ui-icon-arrowthick-1-e"}
+			}).click(function(event) {
+                pause($("#pause").data("intervalID"));
+		autoSlide(); 
+            });
+            $("#previousTurn").button({
+				text:false, 
+				icons: {primary: "ui-icon-arrowthick-1-w"}
+			}).click(function(event) {
+                pause($("#pause").data("intervalID"));
+		autoSlide(null, -1); 
+            });
+            $("#end").button({
+				text:false, 
+				icons: {primary: "ui-icon-seek-end"}
+			}).click(function(event) {
+                pause($("#pause").data("intervalID")); 
+				autoSlide(sliderMax); 
+            });
+		$("#playSpeed").buttonset();
+		$('input[name=playSpeed]:radio').click(function(event) {
+			var multiplier = $('input[name=playSpeed]:radio:checked').val();
+			speed = defaultSpeed / multiplier;  
+			if ($("#pause").data("intervalID")) { 
+				pause($("#pause").data("intervalID")); 
+				$("#pause").data("intervalID", play(speed, factor));
+			}    
+		});
         }); 
         $(function() {
             $("#slider").slider({
@@ -318,9 +381,7 @@
             };
             $("#" +playerName).text(player + " -- cards: " + players[player]["cards"] + " -- troops: " + totalTroops); 
         };
-        //TODO: parse last Action into 1) readable text
-        //                             2) animated shit on graph
-        var actions = ["chose", "deployed", "attacked", "reinforced", "defeated", "spent"];
+        var actions = ["chose", "deployed", "attacked", "reinforced", "defeated", "spent", "neutral"];
         var pos = (actions.map(function(x) {return lastAction.indexOf(x);})); 
         var action = actions[pos.indexOf(d3.max(pos))];
         var lhs = lastAction.slice(0, lastAction.indexOf(action));
@@ -338,7 +399,10 @@
             actionSpent(countries, lhs, rhs);
         } else if (action == "chose") {
             actionChose(countries, lhs, rhs);
-        }
+        } else {
+            d3.select("#lastAction").text("something else happened");
+	}
+	d3.select("#asdf").text(lastAction); 
     }
 
     var actionAttacked = function (countries, lhs, rhs) {
@@ -348,22 +412,21 @@
         var defender = countries[defendingCountry]["owner"];
         var unparsedResults = rhs.slice(rhs.indexOf(">"));
         var lost = unparsedResults.indexOf("lost");
-        var loser;
-        var troops;
         var troopText;
-        if (unparsedResults.charAt(lost + 5) == 0) {
-            unparsedResults = unparsedResults.slice(lost+5);
-            lost = unparsedResults.indexOf("lost");
-            loser = unparsedResults.slice(14, lost-3);
-            troops = unparsedResults.charAt(lost+5);
-            troopText = (troops == 1 ? "troop":"troops")
-        } else {
-            loser = unparsedResults.slice(14, lost-3);
-            troops = unparsedResults.charAt(lost+5);
-            troopText = (troops == 1 ? "troop":"troops")
-        }
+        if (unparsedResults.charAt(lost + 5) != 0) {
+            var loser = unparsedResults.slice(14, lost-3);
+            var troops = unparsedResults.charAt(lost+5);
+            troopText = loser + " lost " + troops + " troops"; 
+	}
+        unparsedResults = unparsedResults.slice(lost+5);
+        lost = unparsedResults.indexOf("lost");
+        if (unparsedResults.charAt(lost + 5) != 0) {
+            var loser = unparsedResults.slice(14, lost-3);
+            var troops = unparsedResults.charAt(lost+5);
+	    troopText = troopText + "; " + loser + " lost " + troops + " troops.";
+	}
         d3.select("#lastAction").text(attacker + " / " + attackingCountry + " attacked " + defender + " / " +  defendingCountry);
-        d3.select("#lastActionResults").text(loser + " lost " + troops + " " + troopText);
+        d3.select("#lastActionResults").text(troopText);
         attackAnimation(attackingCountry, defendingCountry);
     };
 
@@ -476,9 +539,13 @@ var actionReinforced = function (currentTurn, lhs, rhs) {
         force.start(); 
     };
 
-    var autoSlide = function(slideTo) {
-        slideTo = slideTo || $("#slider").slider("value")+1; 
-        $("#slider").slider("value", slideTo);  
+    var autoSlide = function(slideTo, factor) {
+        factor = factor || 1; 
+        slideTo = slideTo || $("#slider").slider("value") + factor; 
+        if (slideTo == broadcasts) {
+            pause($("#pause").data("intervalID")); 
+	}
+	$("#slider").slider("value", slideTo);  
         $.getJSON("/game/" + gameID + "/"+ slideTo, function(data) {
             if (data["turn"] == 0) { 
                 $("#turn").text("Turn: " + data["turn"] + " - Initial Deployment");
@@ -490,8 +557,9 @@ var actionReinforced = function (currentTurn, lhs, rhs) {
         });
     };
 
-    var play = function(speed) {
-        var intervalId = window.setInterval(autoSlide, speed); 
+    var play = function(speed, factor) {
+        var intervalId = window.setInterval(function() {
+		autoSlide(null, factor); }, speed); 
         return intervalId; 
     };
 

@@ -1,7 +1,6 @@
 {% extends "games_base.html" %}
 
 {% block head %}
-    <link rel="stylesheet" type="text/css" href="/static/css/watch-game.css" />
     <link rel="stylesheet" type ="text/css" href="/static/js/jquery-ui-1.10.3/themes/base/jquery.ui.all.css"></link>
     <script> 
         var gameID = "{{game.uid}}";
@@ -11,17 +10,32 @@
     <script type="text/javascript" src="/static/js/d3.v3.js"></script> 
     <script type="text/javascript" src="/static/js/jquery-ui-1.10.3/ui/jquery-ui.js"></script> 
     <script type="text/javascript" src="/static/js/watch-game.js"></script>     
+    <link rel="stylesheet" type="text/css" href="/static/css/watch-game.css" />
 {% endblock %}
 
 {% block body2 %}
 	<div id = "controls">
-		<div id = "gameStats"><h2>Game Statistics</h2></div>
 		<div id = "turn"></div>
 		<div id = "slider"></div>
 		<br>
-		<button id = "play">Play Game</button>
-		<button id = "pause">Pause</button>
+		<div id = "toolbar" class = "uu-widget-header ui-corner-all">
+			<button id = "beginning">Go to Beginning</button>
+			<button id = "rewind">Rewind</button>
+			<button id = "previousTurn">Previous Turn</button>
+			<button id = "play">Play Game</button>
+			<button id = "nextTurn">Next Turn</button>
+			<button id = "pause">Pause</button>
+			<button id = "end">End</button>
+			<span id = "playSpeed">
+				<input type = "radio" id = "playQuarter" name = "playSpeed" value = 0.25 /><label for = "playQuarter">1/4x</label>
+				<input type = "radio" id = "playHalf" name = "playSpeed" value = 0.5  /><label for = "playHalf">1/2x</label>
+				<input type = "radio" id = "playRegular" name = "playSpeed" value = 1 checked = "checked"/><label for = "playRegular">1x</label>
+				<input type = "radio" id = "playDouble" name = "playSpeed" value = 2 /><label for = "playDouble">2x</label>
+				<input type = "radio" id = "playQuadruple" name = "playSpeed" value = 4  /><label for = "playQuadruple">4x</label>
+			</span>
+		</div>
 	</div>
+	<div id = "gameStats"><h2>Game Statistics</h2></div>
         <br><br>
         <div id = "map"></div>
         <br><br>
