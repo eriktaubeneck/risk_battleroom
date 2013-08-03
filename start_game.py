@@ -32,4 +32,5 @@ def start_risk_game(user_ids, game_id):
 
 from app import db
 from app.models import User, Game
-from risk_helper import Player, Players
+from player_helper import Player
+from players_helper import Players

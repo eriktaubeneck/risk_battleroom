@@ -20,7 +20,8 @@ mongo = PyMongo(app)
 Markdown(app)
 
 from app.models import User, Game
-from risk_helper import Player, Players
+from player_helper import Player
+from players_helper import Players
 from start_game import start_risk_game
 
 @app.route("/")
