@@ -161,7 +161,7 @@ class Player(BasePlayer):
         payload = {'risk': game.game_state_json(self)}
         if not self.is_neutral:
             try:
-                r = requests.post(self.broadcast_url, data=payload, timeout=0.5)
+                r = requests.post(self.broadcast_url, data=payload)
             except Exception as e:
                 print e
                 pass
