@@ -39,7 +39,7 @@ class Player(BasePlayer):
         try:
             r = self.send_request(game)
             country = game.board.countries[r['data']]
-            country.add_troops(self,1)
+            self.choose_country(country)
             self.available_actions = []
             game.last_action = "%s chose country %s" % (self,country)
             return True
