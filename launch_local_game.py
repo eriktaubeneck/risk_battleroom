@@ -26,7 +26,7 @@ first_port = 4444
 
 players = Players()
 for i in range(n_players):
-    players.add_player(Player('player %s' % (first_port+1), 'http://localhost:%s' % (first_port+i)))
+    players.add_player(Player('player %s' % (first_port+i), 'http://localhost:%s' % (first_port+i)))
 
 game = Game(players)
 game.start_game()
