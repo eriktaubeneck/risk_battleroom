@@ -158,7 +158,7 @@ class Player(BasePlayer):
             return False
 
     def broadcast_game(self, game):
-        payload = {'risk': game.game_state_json(self)}
+        payload = game.game_state_json(self)
         if not self.is_neutral:
             try:
                 r = requests.post(self.broadcast_url, data=payload)
