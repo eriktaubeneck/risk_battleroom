@@ -16,7 +16,7 @@ class Player(BasePlayer):
         assert r.status_code == 200
 
     def send_request(self, game):
-        payload = {'risk': game.game_state_json(self)}
+        payload = game.game_state_json(self)
         r = requests.post(self.turn_url, data=payload, timeout=self.timeout)
         r = r.json()
         assert r['action'] in self.available_actions
